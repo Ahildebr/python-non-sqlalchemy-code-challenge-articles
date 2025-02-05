@@ -1,38 +1,40 @@
 class Article:
-
     all = []
 
     def __init__(self, author, magazine, title):
         self._author = author
-        self.magazine = magazine
-        self._title = title
+        self._magazine = magazine
+        if isinstance(title, str) and 5 <= len(title) <= 50:
+            self._title = title
+        else:
+            self._title = "Title is invalid"
         Article.all.append(self)
         author._articles.append(self)
 
     @property
     def title(self):
-        if isinstance(self._title, str) and 4 < len(self._title) < 51:
-            return self._title
-        else:
-            return "Title is invalid"
-
-    @property
-    def author(self):
-        if isinstance(self._author, Author):
-            return self._author
-        else:
-            return "Author is invalid"
-    
-    @author.setter
-    def author(self, new_value):
-        self._author = new_value
+        return self._title
 
     @title.setter
     def title(self, new_value):
         pass
 
-   
-    
+    @property
+    def author(self):
+        return self._author
+
+    @author.setter
+    def author(self, new_value):
+        self._author = new_value
+
+    @property
+    def magazine(self):
+        return self._magazine
+
+    @magazine.setter
+    def magazine(self, new_value):
+        self._magazine = new_value
+
 
 class Author:
     all = []
@@ -40,14 +42,14 @@ class Author:
     def __init__(self, name):
         if not isinstance(name, str) or len(name) == 0:
             raise Exception("Name must be a non-empty string")
-        self._name = name 
+        self._name = name
         self._articles = []
         Author.all.append(self)
-        
+
     @property
     def name(self):
         return self._name
-    
+
     @name.setter
     def name(self, new_value):
         pass
@@ -56,18 +58,15 @@ class Author:
         return self._articles
 
     def magazines(self):
-        unique_magazines = []
-        for article in self._articles:
-            if article.magazine not in unique_magazines:
-                unique_magazines.append(article.magazine)
-        return unique_magazines
+        return list({article.magazine for article in self._articles})
 
     def add_article(self, magazine, title):
         return Article(self, magazine, title)
 
     def topic_areas(self):
-        categories = {article.magazine.category for article in self._articles}
-        return list(categories) if categories else None
+        cats = {article.magazine.category for article in self._articles}
+        return list(cats) if cats else None
+
 
 class Magazine:
     all = []
@@ -77,6 +76,28 @@ class Magazine:
         self.category = category
         Magazine.all.append(self)
 
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, new_value):
+        if isinstance(new_value, str) and 2 <= len(new_value) <= 16:
+            self._name = new_value
+        else:
+            pass
+
+    @property
+    def category(self):
+        return self._category
+
+    @category.setter
+    def category(self, new_value):
+        if isinstance(new_value, str) and len(new_value) > 0:
+            self._category = new_value
+        else:
+            pass
+
     def articles(self):
         return [article for article in Article.all if article.magazine == self]
 
@@ -84,15 +105,13 @@ class Magazine:
         return list({article.author for article in self.articles()})
 
     def article_titles(self):
-        return [article.title for article in self.articles()]
+        titles = [article.title for article in self.articles()]
+        return titles if titles else None
 
     def contributing_authors(self):
         counts = {}
         for article in self.articles():
             author = article.author
-            if author in counts:
-                counts[author] += 1
-            else:
-                counts[author] = 1
+            counts[author] = counts.get(author, 0) + 1
         authors = [author for author, count in counts.items() if count > 2]
         return authors if authors else None
